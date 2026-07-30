@@ -1,157 +1,119 @@
 """
 classifier.py
-=============
 
-Responsabilidad
----------------
-Carga el modelo OpenCLIP y prepara los recursos necesarios para realizar
-clasificación de imágenes.
+Clasifica una imagen de un animal utilizando la API de OpenAI.
 
-Entradas
---------
-Ninguna.
+El módulo envía una imagen al modelo GPT-5 Nano y obtiene como respuesta
+una única categoría perteneciente al conjunto de esqueletos soportados
+por el proyecto.
 
-Salidas
--------
-- Modelo OpenCLIP.
-- Función de preprocesado de imágenes.
-- Tokenizer asociado al modelo.
+La función principal es ``classify_image()``, que devuelve el nombre de
+la categoría detectada.
 
-Dependencias
-------------
-- torch
-- open_clip
+"""
+import base64
+from pathlib import Path
 
-No hace
---------
-- No clasifica imágenes.
-- No selecciona esqueletos.
-- No contiene lógica de negocio.
+from dotenv import load_dotenv
+from openai import OpenAI
+
+# Carga las variables de entorno (.env)
+load_dotenv()
+
+# Cliente OpenAI
+client = OpenAI()
+
+#: Categorías válidas soportadas por el proyecto.
+CATEGORIES = [
+    "Bear",
+    "BlackWidow",
+    "Crocodile",
+    "Deer",
+    "DragonFly",
+    "Eagle",
+    "GreatHornedOwl",
+    "HellenicHound",
+    "Horse",
+    "IndianElephant",
+    "Squid",
+    "WhiteShark",
+]
+
+# Prompt enviado al modelo.
+PROMPT = f"""
+You are an image classifier.
+
+Classify the animal shown in the image.
+
+You MUST answer using ONLY one of these categories:
+
+{", ".join(CATEGORIES)}
+
+Return ONLY the category name.
+Do not add explanations.
+Do not use punctuation.
 """
 
-import open_clip
-import torch
 
-def load_model():
+def classify_image(image_path: str) -> str:
     """
-    Carga el modelo OpenCLIP.
+    Clasifica una imagen mediante OpenAI.
 
-    Returns
-    -------
-    tuple
-        (model, preprocess, tokenizer)
+    Args:
+        image_path (str):
+            Ruta de la imagen que se desea clasificar.
+
+    Returns:
+        str:
+            Categoría detectada. Siempre será una de las definidas en CATEGORIES
+
+    Raises:
+        FileNotFoundError:
+            Si la imagen no existe.
+
+        ValueError:
+            Si OpenAI devuelve una categoría no válida.
+            
+        OpenAIError:
+            Si ocurre un error durante la llamada a la API
     """
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    image_path = Path(image_path)
 
-    model, _, preprocess = open_clip.create_model_and_transforms(
-        "ViT-B-32",
-        pretrained="laion2b_s34b_b79k",
-        device=device,
+    if not image_path.exists():
+        raise FileNotFoundError(f"Image not found: {image_path}")
+
+    with image_path.open("rb") as image_file:
+        image_base64 = base64.b64encode(
+            image_file.read()
+        ).decode("utf-8")
+
+    response = client.responses.create(
+        model="gpt-5-nano",
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": PROMPT,
+                    },
+                    {
+                        "type": "input_image",
+                        "image_url": (
+                            f"data:image/png;base64,{image_base64}"
+                        ),
+                    },
+                ],
+            }
+        ],
     )
 
-    tokenizer = open_clip.get_tokenizer("ViT-B-32")
+    category = response.output_text.strip()
 
-    return model, preprocess, tokenizer
+    if category not in CATEGORIES:
+        raise ValueError(
+            f"Invalid category returned by OpenAI: {category}"
+        )
 
-from PIL import Image
-
-def encode_image(model,preprocess,image_path):
-    """
-    Convertimos la imagen en su embedding con OpenCLIP
-    
-    Parametros
-    ----------------
-    
-    model
-        Modelo OpenCLIP.
-    
-    preprocess
-        Transformaciones necesarias para preparar la imagen.
-        
-    image_path : str
-        Ruta de la imagen
-        
-    Retorna
-    -----------------
-    torch.Tensor
-        Embedding de la imagen.
-     
-        
-    """
-    
-    imagen = Image.open(image_path).convert("RGB")
-    imagen = preprocess(imagen).unsqueeze(0)
-    device = next(model.parameters()).device
-    
-    imagen = imagen.to(device)
-    
-    with torch.no_grad():
-        embedding = model.encode_image(imagen)
-        
-    return embedding
-
-def encode_text(model,tokenizer,texts):
-    """
-    Convierte uno o varios textos en embeddings con OpenCLIP
-    
-    Parametros
-    ----------------
-    
-    model
-        Modelo OpenCLIP
-        
-    tokenizer
-        Tokenizer asociado al model
-        
-    texts : list[str]
-        Lista de textos
-    
-    Retorna
-    ----------------
-    torch.Tensor
-        Embeddings de los textos
-
-    """
-    device = next(model.parameters()).device
-    
-    tokens = tokenizer(texts).to(device)
-    
-    with torch.no_grad():
-        embeddings = model.encode_text(tokens)
-    
-    return embeddings
-
-import torch.nn.functional as F
-
-def compute_similarity(image_embedding, text_embeddings):
-    """
-    Calcula la similitud entre una imagen y varios textos.
-
-
-    Parametros
-    -------------------
-
-    image_embedding
-        Embedding de una imagen.
-
-    text_embeddings
-        Embeddings de varios textos.
-
-
-    Retorna
-    -------------------
-
-    torch.Tensor
-        Vector con la similitud de la imagen respecto a cada texto.
-
-    """
-
-    image_embedding = F.normalize(image_embedding, dim=-1)
-    text_embeddings = F.normalize(text_embeddings, dim=-1)
-
-    similarity = image_embedding @ text_embeddings.T
-
-    return similarity.squeeze(0)
-    
-    
+    return category

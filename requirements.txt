@@ -1,4 +1,2 @@
-torch
-torchvision
-open_clip_torch
-Pillow
+openai
+python-dotenv
