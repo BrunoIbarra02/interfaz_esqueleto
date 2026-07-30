@@ -1,4 +1,9 @@
-from skeleton_selector.classifier import load_model, encode_image
+from skeleton_selector.classifier import (
+    load_model,
+    encode_image,
+    encode_text,
+    compute_similarity,
+)
 
 
 def main():
@@ -8,19 +13,47 @@ def main():
 
     print("Modelo cargado correctamente.")
 
-    print("Generando embedding de la imagen...")
-    
-    TEST_IMAGE = "tests/images/oso_pardo.png"
+    image_path = "tests/images/oso_pardo.png"
 
-    embedding = encode_image(
+    labels = [
+        "bear",
+        "deer",
+        "horse",
+        "wolf",
+    ]
+
+    print("Generando embedding de la imagen...")
+
+    image_embedding = encode_image(
         model,
         preprocess,
-        TEST_IMAGE,
+        image_path,
     )
 
-    print("Embedding generado correctamente.")
-    print(f"Shape: {embedding.shape}")
-    print(f"Device: {embedding.device}")
-    print(f"Dtype: {embedding.dtype}")
+    print("Generando embeddings de texto...")
+
+    text_embeddings = encode_text(
+        model,
+        tokenizer,
+        labels,
+    )
+    print("Calculando similitud...")
+
+    similarities = compute_similarity(
+        image_embedding,
+        text_embeddings,
+    )
+
+    results = sorted(
+        zip(labels, similarities.tolist()),
+        key=lambda x: x[1],
+        reverse=True,
+    )
+
+    print("\nRanking:")
+
+    for label, score in results:
+        print(f"{label:10} {score:.4f}")
+
 if __name__ == "__main__":
     main()

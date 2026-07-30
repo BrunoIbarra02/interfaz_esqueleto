@@ -90,4 +90,68 @@ def encode_image(model,preprocess,image_path):
         embedding = model.encode_image(imagen)
         
     return embedding
+
+def encode_text(model,tokenizer,texts):
+    """
+    Convierte uno o varios textos en embeddings con OpenCLIP
+    
+    Parametros
+    ----------------
+    
+    model
+        Modelo OpenCLIP
+        
+    tokenizer
+        Tokenizer asociado al model
+        
+    texts : list[str]
+        Lista de textos
+    
+    Retorna
+    ----------------
+    torch.Tensor
+        Embeddings de los textos
+
+    """
+    device = next(model.parameters()).device
+    
+    tokens = tokenizer(texts).to(device)
+    
+    with torch.no_grad():
+        embeddings = model.encode_text(tokens)
+    
+    return embeddings
+
+import torch.nn.functional as F
+
+def compute_similarity(image_embedding, text_embeddings):
+    """
+    Calcula la similitud entre una imagen y varios textos.
+
+
+    Parametros
+    -------------------
+
+    image_embedding
+        Embedding de una imagen.
+
+    text_embeddings
+        Embeddings de varios textos.
+
+
+    Retorna
+    -------------------
+
+    torch.Tensor
+        Vector con la similitud de la imagen respecto a cada texto.
+
+    """
+
+    image_embedding = F.normalize(image_embedding, dim=-1)
+    text_embeddings = F.normalize(text_embeddings, dim=-1)
+
+    similarity = image_embedding @ text_embeddings.T
+
+    return similarity.squeeze(0)
+    
     
