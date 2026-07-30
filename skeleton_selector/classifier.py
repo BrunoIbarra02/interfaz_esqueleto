@@ -32,7 +32,6 @@ No hace
 import open_clip
 import torch
 
-
 def load_model():
     """
     Carga el modelo OpenCLIP.
@@ -54,3 +53,41 @@ def load_model():
     tokenizer = open_clip.get_tokenizer("ViT-B-32")
 
     return model, preprocess, tokenizer
+
+from PIL import Image
+
+def encode_image(model,preprocess,image_path):
+    """
+    Convertimos la imagen en su embedding con OpenCLIP
+    
+    Parametros
+    ----------------
+    
+    model
+        Modelo OpenCLIP.
+    
+    preprocess
+        Transformaciones necesarias para preparar la imagen.
+        
+    image_path : str
+        Ruta de la imagen
+        
+    Retorna
+    -----------------
+    torch.Tensor
+        Embedding de la imagen.
+     
+        
+    """
+    
+    imagen = Image.open(image_path).convert("RGB")
+    imagen = preprocess(imagen).unsqueeze(0)
+    device = next(model.parameters()).device
+    
+    imagen = imagen.to(device)
+    
+    with torch.no_grad():
+        embedding = model.encode_image(imagen)
+        
+    return embedding
+    
