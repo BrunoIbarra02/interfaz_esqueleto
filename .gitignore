@@ -13,3 +13,5 @@ models/
 
 *.pt
 *.pth
+
+tests/topology/output/
