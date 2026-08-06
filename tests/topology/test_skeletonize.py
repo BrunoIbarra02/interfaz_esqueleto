@@ -31,6 +31,7 @@ OUTPUT_DIR = Path(__file__).parent / "output"
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+import tests.topology.common as common
 from topology.preprocess import load_mesh
 
 ################################################
@@ -44,28 +45,13 @@ def get_vertex_cluster_skeleton():
 
     glb_path = TEST_GLB
 
-    mesh = get_fixed_mesh()
+    mesh = common.get_mesh()
 
     return skeletor.skeletonize.by_vertex_clusters(
         mesh,
         sampling_dist=0.05,
     )
 
-def get_fixed_mesh():
-    """
-    Carga y preprocesa la mmalla de prueba
-    """
-    
-    glb_path = TEST_GLB
-
-    mesh = load_mesh(str(glb_path))
-
-    return skeletor.pre.fix_mesh(
-        mesh,
-        remove_disconnected=5,
-        inplace=False,
-    )
-    
 def print_skeleton_stats(name, skeleton):
     """
     Muestra información básica de un Skeleton.
@@ -127,31 +113,15 @@ def test_fix_mesh():
     Evalúa el comportamiento de fix_mesh sobre una malla.
     """
 
-    glb_path = TEST_GLB
+    mesh = load_mesh(str(TEST_GLB))
 
-    mesh = load_mesh(str(glb_path))
-
-    print_skeleton_stats("Malla original", mesh)
-
-    fixed_mesh = get_fixed_mesh()
-
-    print(f"Tipo        : {type(mesh).__name__}")
-    print(f"Vertices    : {len(mesh.vertices)}")
-    print(f"Caras       : {len(mesh.faces)}")
-    print(f"Watertight  : {mesh.is_watertight}")
-
-    fixed_mesh = get_fixed_mesh()
+    common.print_mesh_stats("Malla original", mesh)
+    
+    fixed_mesh = common.get_mesh()
 
     print()
 
-    print("=" * 60)
-    print("Malla reparada")
-    print("=" * 60)
-
-    print(f"Tipo        : {type(fixed_mesh).__name__}")
-    print(f"Vertices    : {len(fixed_mesh.vertices)}")
-    print(f"Caras       : {len(fixed_mesh.faces)}")
-    print(f"Watertight  : {fixed_mesh.is_watertight}")
+    common.print_mesh_stats("Malla Reparada", fixed_mesh)
     
 def test_fix_mesh_vs_original():
     """
@@ -182,7 +152,7 @@ def test_fix_mesh_vs_original():
     print("Skeleton con fix_mesh")
     print("=" * 60)
 
-    fixed_mesh = get_fixed_mesh()
+    fixed_mesh = common.get_mesh()
 
     skeleton_fixed = skeletor.skeletonize.by_vertex_clusters(
         fixed_mesh,
@@ -224,7 +194,7 @@ def test_fix_mesh_export():
     # Skeleton con fix_mesh
     # --------------------------------------------------
 
-    fixed_mesh = get_fixed_mesh()
+    fixed_mesh = common.get_mesh()
 
     skeleton_fixed = skeletor.skeletonize.by_vertex_clusters(
         fixed_mesh,
@@ -261,7 +231,7 @@ def test_wavefront():
     """
     Evalúa el algoritmo Wavefront de Skeletor.
     """
-    mesh = get_fixed_mesh()
+    mesh = common.get_mesh()
     
     skeleton = skeletor.skeletonize.by_wavefront(
         mesh,
@@ -277,7 +247,7 @@ def test_wavefront_exact():
     """
     Evalúa el algoritmo Wavefront Exact de Skeletor.
     """
-    mesh = get_fixed_mesh()
+    mesh = common.get_mesh()
 
     skeleton = skeletor.skeletonize.by_wavefront_exact(
         mesh,
@@ -291,7 +261,7 @@ def test_teasar():
     """
     Evalúa el algoritmo Teasar de Skeletor.
     """
-    mesh = get_fixed_mesh()
+    mesh = common.get_mesh()
     
     skeleton = skeletor.skeletonize.by_teasar(
         mesh,
@@ -310,17 +280,17 @@ def main():
     
     # test_fix_mesh_api()
     
-    # test_fix_mesh()
+    test_fix_mesh()
     
     # test_fix_mesh_vs_original()
     
     # test_fix_mesh_export()
     
-    #test_wavefront()
+    test_wavefront()
     
     # test_wavefront_exact()
     
-    #test_teasar()
+    test_teasar()
 
 if __name__ == "__main__":
     main()

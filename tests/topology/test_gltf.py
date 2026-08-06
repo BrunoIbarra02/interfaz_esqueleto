@@ -15,6 +15,12 @@ Estado:
 """
 
 from pathlib import Path
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(PROJECT_ROOT))
+
+import tests.topology.common as common
 
 from pygltflib import GLTF2
 
@@ -40,9 +46,7 @@ def test_summary():
 
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Resumen")
-    print("=" * 60)
+    common.print_title("Resumen")
 
     print(f"Scenes       : {len(gltf.scenes)}")
     print(f"Nodes        : {len(gltf.nodes)}")
@@ -59,22 +63,13 @@ def test_summary():
 
 
 ################################################
-# SCENES
-################################################
-
-def test_scenes():
-    pass
-
-################################################
 # NODES
 ################################################
 
 def test_nodes():
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Nodes")
-    print("=" * 60)
+    common.print_title("Nodes")
 
     for i, node in enumerate(gltf.nodes):
         print(f"Node {i}")
@@ -88,9 +83,7 @@ def test_nodes():
 def test_meshes():
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Meshes")
-    print("=" * 60)
+    common.print_title("Meshes")
 
     for i, mesh in enumerate(gltf.meshes):
         print(f"Mesh {i}")
@@ -108,9 +101,7 @@ def test_accessors():
 
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Accessors")
-    print("=" * 60)
+    common.print_title("ACCESSORS")
 
     for i, accessor in enumerate(gltf.accessors):
 
@@ -141,9 +132,7 @@ def test_buffer_views():
 
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("BufferViews")
-    print("=" * 60)
+    common.print_title("Buffer Views")
 
     for i, view in enumerate(gltf.bufferViews):
 
@@ -163,9 +152,7 @@ def test_buffers():
 
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Buffers")
-    print("=" * 60)
+    common.print_title("Buffers")
 
     for i, buffer in enumerate(gltf.buffers):
 
@@ -186,9 +173,7 @@ def test_images():
 
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Images")
-    print("=" * 60)
+    common.print_title("Images")
 
     for i, image in enumerate(gltf.images):
 
@@ -207,9 +192,7 @@ def test_textures():
 
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Textures")
-    print("=" * 60)
+    common.print_title("Textures")
 
     for i, texture in enumerate(gltf.textures):
 
@@ -228,9 +211,7 @@ def test_scenes():
 
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Scenes")
-    print("=" * 60)
+    common.print_title("Scenes")
 
     for i, scene in enumerate(gltf.scenes):
 
@@ -249,9 +230,7 @@ def test_materials():
 
     gltf = get_gltf()
 
-    print("=" * 60)
-    print("Materials")
-    print("=" * 60)
+    common.print_title("Materials")
 
     for i, material in enumerate(gltf.materials):
 
