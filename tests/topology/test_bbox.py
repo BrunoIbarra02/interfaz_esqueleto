@@ -7,7 +7,7 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-import topology.common as common
+import tests.topology.common as common
 
 TEST_GLB = "tests/topology/glb/oso_polar.glb"
 
