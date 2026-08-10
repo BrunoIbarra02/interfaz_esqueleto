@@ -47,10 +47,10 @@ class SkeletonFeatures:
     # GEOMETRÍA
     ################################################
 
-
     bone_length_min: float = 0.0
     bone_length_max: float = 0.0
     bone_length_mean: float = 0.0
+    bone_length_std: float = 0.0
 
     ################################################
     # PROPORCIONES
@@ -233,6 +233,10 @@ def _extract_geometry(root_bone, features):
         features.bone_length_mean = (
             sum(lengths)
             / len(lengths)
+        )
+        
+        features.bone_length_std = float(
+            np.std(lengths)
         )
 
 ################################################

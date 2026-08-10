@@ -41,9 +41,7 @@ def walk_bones(bone):
         
     return count
         
-    print(f"Bones recorridos: {count}")
-        
-def build_bone_tree():
+def build_bone_tree(glb_path=common.TEST_GLB):
     """
     Construye una jerarquía de Bone a partir del árbol de NetworkX.
 
@@ -53,7 +51,7 @@ def build_bone_tree():
         Hueso raíz del árbol.
     """
     
-    skeleton = common.get_skeleton()
+    skeleton = common.get_skeleton(glb_path)
     
     graph = skeleton.get_graph().reverse(copy=False)
 

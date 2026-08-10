@@ -23,9 +23,8 @@ def test_topology():
 
     print(features)
 
-    print("BBox Ratios")
-    print(features.bbox_width_ratio)
-    print(features.bbox_height_ratio)
+    print("Bone Length Std")
+    print(features.bone_length_std)
     
 
 

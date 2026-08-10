@@ -19,7 +19,7 @@ from topology.preprocess import load_mesh
 # Configuración
 # ------------------------------------------------------------------
 
-TEST_GLB = PROJECT_ROOT / "tests" / "topology" / "glb" / "oso_polar.glb"
+TEST_GLB = PROJECT_ROOT / "tests" / "topology" / "glb" / "Eagle.glb"
 
 
 # ------------------------------------------------------------------
@@ -40,11 +40,11 @@ def print_title(title):
 # Datos de prueba
 # ------------------------------------------------------------------
 
-def get_mesh():
+def get_mesh(glb_path=TEST_GLB):
     """
     Carga la malla utilizada en las pruebas.
     """
-    mesh = load_mesh(str(TEST_GLB))
+    mesh = load_mesh(str(glb_path))
     
     return skeletor.pre.fix_mesh(
         mesh,
@@ -53,23 +53,23 @@ def get_mesh():
     )
 
 
-def get_skeleton():
+def get_skeleton(glb_path=TEST_GLB):
     """
     Genera el Skeleton utilizado en las pruebas.
     """
 
     return skeletor.skeletonize.by_teasar(
-        get_mesh(),
+        get_mesh(glb_path),
         inv_dist=0.1,
     )
 
 
-def get_graph():
+def get_graph(glb_path=TEST_GLB):
     """
     Genera el grafo del Skeleton utilizado en las pruebas.
     """
 
-    return get_skeleton().get_graph()
+    return get_skeleton(glb_path).get_graph()
 
 def print_mesh_stats(name, mesh):
     """

@@ -105,7 +105,7 @@ class SkeletonComparator:
             features_a.branch_length_mean,
             features_b.branch_length_mean,
         )
-
+        
         return score / 3.0
 
     ################################################

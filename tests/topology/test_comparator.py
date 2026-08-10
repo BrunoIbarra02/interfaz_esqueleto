@@ -12,20 +12,39 @@ from topology.features import extract_features
 
 from test_bones import build_bone_tree
 
+#############################################
+# VARIABLES
+#############################################
+
+GLB_A = common.PROJECT_ROOT / "tests" / "topology" / "glb" / "oso_pardo.glb"
+GLB_B = common.PROJECT_ROOT / "tests" / "topology" / "glb" / "Eagle.glb"
+
 def test_comparator():
     
-      
-    mesh = common.get_mesh()
+    mesh_a = common.get_mesh(GLB_A)
+    mesh_b = common.get_mesh(GLB_B)
 
-    root = build_bone_tree()
+    root_a = build_bone_tree(GLB_A)
+    root_b = build_bone_tree(GLB_B)
 
-    features_a = extract_features(mesh, root)
+    features_a = extract_features(mesh_a, root_a)
 
-    features_b = copy.deepcopy(features_a)
-
-    features_b.branch_length_mean *= 1.10
+    features_b = extract_features(mesh_b,root_b)
 
     comparator = SkeletonComparator()
+    print("A:")
+    print(features_a)
+
+    print()
+    print("B:")
+    print(features_b)
+
+    print()
+    print("Topology :", comparator.compare_topology(features_a, features_b))
+    print("Geometry :", comparator.compare_geometry(features_a, features_b))
+    print("Branches :", comparator.compare_branches(features_a, features_b))
+    print("BBox     :", comparator.compare_bbox(features_a, features_b))
+    
     
     score = comparator.compare(
         features_a,
