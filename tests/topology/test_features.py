@@ -1,35 +1,74 @@
+"""
+Test: Features
+
+Objetivo:
+Validar la extracción de características de un Bone Tree.
+"""
+
 from pathlib import Path
-import sys
 
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(PROJECT_ROOT))
-
-import tests.topology.common as common
+from topology.preprocess import load_mesh
+from topology.skeletonize import generate_skeleton
+from topology.bone import build_bone_tree
 from topology.features import extract_features
 
-from test_bones import build_bone_tree
+
+GLB_DIR = Path(__file__).parent / "glb"
 
 
-def test_topology():
-    
-    mesh = common.get_mesh()
+def test_features():
 
-    root = build_bone_tree()
+    glb_path = GLB_DIR / "oso_polar.glb"
 
-    features = extract_features(mesh,root)
+    mesh = load_mesh(
+        str(glb_path)
+    )
 
-    common.print_title("Topology Features")
+    skeleton = generate_skeleton(
+        mesh,
+        sampling_dist=0.05,
+    )
 
-    print(features)
+    root = build_bone_tree(
+        skeleton
+    )
 
-    print("Bone Length Std")
-    print(features.bone_length_std)
-    
+    features = extract_features(
+        root
+    )
 
+    assert features is not None
 
-def main():
-    test_topology()
-    
-if __name__ == "__main__":
-    main()
+    assert features.node_count > 0
+    assert features.leaf_count > 0
+
+    assert features.bone_length_mean > 0
+
+    print()
+    print("=" * 60)
+    print("Features")
+    print("=" * 60)
+
+    print(
+        f"Nodes        : {features.node_count}"
+    )
+
+    print(
+        f"Leaves       : {features.leaf_count}"
+    )
+
+    print(
+        f"Branches     : {features.branch_count}"
+    )
+
+    print(
+        f"Max children : {features.max_children}"
+    )
+
+    print(
+        f"Max depth    : {features.max_depth}"
+    )
+
+    print(
+        f"Bone mean    : {features.bone_length_mean:.6f}"
+    )

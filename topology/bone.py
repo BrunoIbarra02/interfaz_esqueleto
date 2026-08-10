@@ -8,28 +8,11 @@ class Bone:
 
     def __init__(self, node_id, position):
 
-        ################################################
-        # IDENTIDAD
-        ################################################
-
         self.node_id = node_id
-
-        ################################################
-        # GEOMETRÍA
-        ################################################
-
         self.position = position
-
-        ################################################
-        # ÁRBOL
-        ################################################
 
         self.parent = None
         self.children = []
-
-        ################################################
-        # FEATURES
-        ################################################
 
         self.length = 0.0
         self.depth = 0
@@ -38,9 +21,62 @@ class Bone:
         return f"Bone({self.node_id})"
 
 
+def build_bone_tree(skeleton):
+    """
+    Convierte el Skeleton de Skeletor en una jerarquía de Bone.
+    """
+
+    graph = skeleton.get_graph().reverse(copy=False)
+
+    swc = skeleton.swc
+
+    # Posiciones de los nodos
+    positions = {}
+
+    for _, row in swc.iterrows():
+
+        positions[row.node_id] = np.array(
+            [
+                row.x,
+                row.y,
+                row.z,
+            ],
+            dtype=float,
+        )
+
+    # Crear los Bone
+    bones = {}
+
+    for node in graph.nodes():
+
+        bones[node] = Bone(
+            node,
+            positions[node],
+        )
+
+    # Conectar padres e hijos
+    for parent_id, child_id in graph.edges():
+
+        parent = bones[parent_id]
+        child = bones[child_id]
+
+        parent.children.append(child)
+        child.parent = parent
+
+    # Buscar la raíz
+    root = next(
+        node
+        for node, indegree in graph.in_degree()
+        if indegree == 0
+    )
+
+    return bones[root]
+
+
 def get_root_to_leaf_paths(root):
     """
-    Devuelve todos los caminos desde la raíz hasta cada hoja.
+    Devuelve todos los caminos desde la raíz
+    hasta cada hoja.
     """
 
     paths = []
@@ -61,6 +97,3 @@ def get_root_to_leaf_paths(root):
     walk(root, [])
 
     return paths
-
-def get_brances(root):
-    pass

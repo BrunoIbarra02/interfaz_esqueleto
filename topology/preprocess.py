@@ -2,27 +2,25 @@
 preprocess.py
 
 Responsabilidad
--------------------
-Cargar la geometría de un modelo GLB y obtener una única malla
-que será utilizada en las siguientes etapas del pipeline.
+---------------
+
+Cargar y preparar la geometría de un modelo GLB para
+las etapas posteriores de la Vía 2.
 
 Entradas
--------------------
+--------
+
 Ruta de un archivo GLB.
 
 Salidas
--------------------
+-------
+
 Objeto trimesh.Trimesh.
 
 Dependencias
--------------------
-trimesh
+------------
 
-No hace
--------------------
-- No skeletoniza la geometría.
-- No genera huesos.
-- No exporta resultados.
+trimesh
 """
 
 import trimesh
@@ -32,15 +30,13 @@ def load_mesh(glb_path):
     """
     Carga la geometría de un modelo GLB.
 
-    Parametros
-    -------------------
-
-    glb_path
+    Parameters
+    ----------
+    glb_path : str
         Ruta del modelo GLB.
 
-    Retorna
-    -------------------
-
+    Returns
+    -------
     trimesh.Trimesh
         Malla cargada.
     """
@@ -58,7 +54,7 @@ def load_mesh(glb_path):
             raise ValueError(
                 "El GLB no contiene ninguna geometría."
             )
-            
+
         meshes = []
 
         for mesh in geometry.geometry.values():
@@ -70,45 +66,56 @@ def load_mesh(glb_path):
             raise ValueError(
                 "La escena no contiene ninguna malla válida."
             )
-        # Caso 2.1: la escena contiene una única malla.
+
+        # Una única malla.
         if len(meshes) == 1:
             return meshes[0]
-        
-        # Caso 2.2: la escena contiene múltiples mallas.
+
+        # Múltiples mallas.
         return trimesh.util.concatenate(meshes)
 
     raise TypeError(
         f"Tipo de geometría no soportado: {type(geometry)}"
     )
 
+
 def validate_mesh(mesh):
     """
     Valida la malla cargada.
 
-    Parametros
-    -------------------
-
-    mesh
+    Parameters
+    ----------
+    mesh : trimesh.Trimesh
         Malla a validar.
 
-    Retorna
-    -------------------
-
+    Returns
+    -------
     bool
-        True si la malla es válida, de lo contrario lanza una excepción.
+        True si la malla es válida.
     """
 
     if len(mesh.vertices) == 0:
-        raise ValueError("La malla no contiene vértices.")
-    
+        raise ValueError(
+            "La malla no contiene vértices."
+        )
+
     if len(mesh.faces) == 0:
-        raise ValueError("La malla no contiene caras.")
-    
+        raise ValueError(
+            "La malla no contiene caras."
+        )
+
     return True
+
 
 def fix_mesh(mesh):
     """
-    Aplica el preprocesamiento de la malla recomendado por Skeletor.
+    Preprocesa la malla para su uso posterior
+    en la skeletonización.
+
+    La configuración concreta se definirá
+    posteriormente.
     """
-    
-    pass
+
+    raise NotImplementedError(
+        "Mesh preprocessing not implemented yet."
+    )

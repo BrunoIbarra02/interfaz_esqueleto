@@ -15,4 +15,5 @@ models/
 *.pth
 
 tests/topology/output/
+tests/topology/glb/*.glb
 reference_models/
