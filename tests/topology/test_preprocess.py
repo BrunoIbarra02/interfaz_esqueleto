@@ -7,10 +7,19 @@ utilizadas por la Vía 2.
 """
 
 from pathlib import Path
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+sys.path.insert(
+    0,
+    str(PROJECT_ROOT),
+)
 
 from topology.preprocess import (
     load_mesh,
     validate_mesh,
+    fix_mesh,
 )
 
 

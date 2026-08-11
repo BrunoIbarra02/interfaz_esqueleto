@@ -3,3 +3,4 @@ python-dotenv
 pygltflib
 trimesh
 skeletor
+assimp-py==1.1.0
