@@ -1,29 +1,24 @@
 """
 skeletonize.py
 
-Responsabilidad
----------------
+## Responsabilidad
 
 Generar un curve skeleton a partir de una malla utilizando
 los algoritmos de la librería Skeletor.
 
-Entradas
---------
+## Entradas
 
 Objeto trimesh.Trimesh.
 
-Salidas
--------
+## Salidas
 
 Objeto skeletor.Skeleton.
 
-Dependencias
-------------
+## Dependencias
 
 skeletor
 
-No hace
--------
+## No hace
 
 - No carga archivos GLB.
 - No preprocesa la malla.
@@ -52,7 +47,64 @@ def generate_skeleton(mesh, sampling_dist):
         Esqueleto generado.
     """
 
-    return skeletor.skeletonize.vertex_cluster.by_vertex_clusters(
+    return skeletor.skeletonize.by_teasar(
         mesh,
-        sampling_dist=sampling_dist,
+        inv_dist=sampling_dist,
+    )
+
+
+def generate_curve_graph(
+    mesh,
+    sampling_dist,
+    degenerate_threshold=1e-3,
+):
+    """
+    Genera un curve graph simplificado a partir de una malla.
+
+    Flujo:
+
+        mesh
+          ↓
+        TEASAR
+          ↓
+        Skeletor Skeleton
+          ↓
+        NetworkX Graph
+          ↓
+        simplificación
+
+    Parameters
+    ----------
+    mesh : trimesh.Trimesh
+        Malla a skeletonizar.
+
+    sampling_dist : float
+        Distancia de muestreo utilizada por TEASAR.
+
+    degenerate_threshold : float, optional
+        Umbral utilizado para eliminar componentes degeneradas.
+
+    Returns
+    -------
+    networkx.Graph
+        Curve graph simplificado.
+    """
+
+    from topology.curve_graph import (
+        skeleton_to_graph,
+        simplify_curve_graph,
+    )
+
+    skeleton = generate_skeleton(
+        mesh,
+        sampling_dist,
+    )
+
+    graph = skeleton_to_graph(
+        skeleton,
+    )
+
+    return simplify_curve_graph(
+        graph,
+        degenerate_threshold=degenerate_threshold,
     )

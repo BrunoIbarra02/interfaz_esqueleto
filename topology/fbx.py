@@ -4,8 +4,7 @@ fbx.py
 Conversión de la jerarquía de un FBX a nuestro
 Bone Tree interno utilizando assimp-py.
 
-## No hace
-
+No hace:
 - No modifica el FBX.
 - No utiliza Blender.
 - No realiza skinning.
@@ -21,20 +20,16 @@ import numpy as np
 from topology.bone import Bone
 
 
+# ============================================================
+# LOAD
+# ============================================================
+
 def load_fbx_skeleton(fbx_path):
     """
-    Carga un FBX y convierte su jerarquía de joints
+    Carga un FBX y convierte su jerarquía esquelética
     en nuestro Bone Tree.
 
-    Parameters
-    ----------
-    fbx_path : str
-        Ruta del archivo FBX.
-
-    Returns
-    -------
-    Bone
-        Raíz del Bone Tree.
+    La detección del root no depende de nombres concretos.
     """
 
     fbx_path = Path(fbx_path)
@@ -54,46 +49,117 @@ def load_fbx_skeleton(fbx_path):
             f"No se pudo cargar el FBX: {fbx_path}"
         )
 
-    # --------------------------------------------------
-    # Buscar el primer joint
-    # --------------------------------------------------
-
-    joint_root = _find_joint_root(
+    joint_root = _find_skeleton_root(
         scene.root_node
     )
 
     if joint_root is None:
         raise ValueError(
-            "No se encontró ningún joint en el FBX."
+            "No se encontró una jerarquía "
+            "esquelética en el FBX."
         )
-
-    # --------------------------------------------------
-    # Construir Bone Tree
-    # --------------------------------------------------
 
     return _build_bone_tree(
         joint_root
     )
 
 
-def _find_joint_root(node):
+# ============================================================
+# SKELETON ROOT DETECTION
+# ============================================================
+
+def _count_descendants(node):
     """
-    Busca el primer nodo que pertenece a la jerarquía
-    de joints.
+    Cuenta recursivamente los descendientes de un nodo.
     """
 
-    if node.name.endswith("SHJnt"):
-        return node
+    count = 0
 
     for child in node.children:
 
-        result = _find_joint_root(child)
+        count += 1
+        count += _count_descendants(
+            child
+        )
 
-        if result is not None:
-            return result
+    return count
 
-    return None
+def _find_skeleton_root(root):
+    """
+    Busca la raíz de la jerarquía esquelética.
 
+    El FBX suele contener un nodo contenedor que tiene
+    como hijos la jerarquía de huesos y la geometría.
+
+    No se utilizan nombres concretos.
+
+    Se selecciona el hijo con mayor número de
+    descendientes estructurales.
+    """
+
+    def count_descendants(node):
+
+        count = 0
+
+        for child in node.children:
+
+            count += 1
+            count += count_descendants(child)
+
+        return count
+
+    # --------------------------------------------------
+    # Caso habitual:
+    #
+    # RootNode
+    #   └── Container
+    #        ├── Skeleton
+    #        └── Mesh
+    #
+    # Primero descendemos hasta el container.
+    # --------------------------------------------------
+
+    if not root.children:
+        return None
+
+    # RootNode normalmente tiene un único container.
+    container = root.children[0]
+
+    if not container.children:
+        return None
+
+    candidates = []
+
+    for child in container.children:
+
+        descendants = count_descendants(
+            child
+        )
+
+        if descendants > 0:
+
+            candidates.append(
+                (
+                    descendants,
+                    child,
+                )
+            )
+
+    if not candidates:
+        return None
+
+    # Mayor jerarquía = candidato esquelético.
+    candidates.sort(
+        key=lambda item: item[0],
+        reverse=True,
+    )
+
+    return candidates[0][1]
+
+
+# ============================================================
+# BONE TREE
+# ============================================================
 
 def _build_bone_tree(
     node,
@@ -102,7 +168,10 @@ def _build_bone_tree(
 ):
     """
     Convierte recursivamente un nodo Assimp
-    en un Bone.
+    en nuestro Bone Tree.
+
+    Se conservan todos los nodos de la jerarquía
+    seleccionada.
     """
 
     local_transform = np.array(
@@ -112,7 +181,9 @@ def _build_bone_tree(
 
     if parent_transform is None:
 
-        global_transform = local_transform
+        global_transform = (
+            local_transform
+        )
 
     else:
 
@@ -121,25 +192,34 @@ def _build_bone_tree(
             @ local_transform
         )
 
-    position = global_transform[:3, 3]
+    position = global_transform[
+        :3,
+        3,
+    ]
+
+    node_id = (
+        node.node_id
+        if hasattr(node, "node_id")
+        else node.name
+    )
 
     bone = Bone(
-        node.node_id if hasattr(node, "node_id") else node.name,
+        node_id,
         position.copy(),
     )
 
-    # Guardamos el nombre real del joint.
+    # Nombre real del nodo FBX.
     bone.name = node.name
 
     if parent_bone is not None:
 
         bone.parent = parent_bone
-        parent_bone.children.append(bone)
+
+        parent_bone.children.append(
+            bone
+        )
 
     for child in node.children:
-
-        if not child.name.endswith("SHJnt"):
-            continue
 
         _build_bone_tree(
             child,
